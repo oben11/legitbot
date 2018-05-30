@@ -3,6 +3,7 @@ import time
 import random
 import discord
 from discord.ext import commands
+import speech_recognition as sr
 from discord.ext.commands import Bot
 import asyncio
 
@@ -16,6 +17,8 @@ async def on_ready():
     print ("With the ID: " + bot.user.id)
     await bot.change_presence(game=discord.Game(name=';info or ;help'))
 
+
+#PURGE
 @bot.command(pass_context = True)
 async def purge(ctx, number):
     purge_msg = await bot.say("**I am deleting `{}` messages**".format(number))
@@ -33,15 +36,13 @@ async def purge(ctx, number):
     await bot.wait_for_reaction(user=ctx.message.author, message=purge_msg, emoji='❌')
     await bot.delete_message(message=purge_msg)
 
-
-
-
+#rock paper scissors#
 
 #HELP/INFO
 @bot.command(pass_context=True)
 async def info(ctx):
     await bot.say(":arrow_right: **Information:** `Info` ~~`help`~~ `serverinfo` `userinfo {name}`")
-    await bot.say(":arrow_right: **Utility:** `purge {message number}` `ping` ~~`freeze`~~")
+    await bot.say(":arrow_right: **Utility:** `purge {2-100}` `ping` ~~`freeze`~~")
     await bot.say(":arrow_right: **Fun:** `coinflip` `eightball`")
 
 
@@ -172,16 +173,47 @@ async def eightball(ctx, arg):
 
     #re-roll#
     await bot.add_reaction(message=eightball_cmd_msg, emoji='↩')
-    await bot.wait_for_reaction(user=ctx.message.author, message=eightball_cmd_msg, emoji='↩')
-    eightball(ctx)
+    await bot.add_reaction(message=eightball_cmd_msg, emoji='❌')
 
+    if bot.wait_for_reaction(user=ctx.message.author, message=eightball_cmd_msg, emoji='↩'):
+        eightball(ctx)
+
+    if bot.wait_for_reaction(user=ctx.message.author, message=eightball_cmd_msg, emoji='❌'):
+        await bot.delete_message(message=eightball_cmd_msg)
 
     #cancel#
-    await bot.add_reaction(message=eightball_cmd_msg, emoji='❌')
-    await bot.wait_for_reaction(user=ctx.message.author, message=eightball_cmd_msg, emoji='❌')
-    await bot.delete_message(message=eightball_cmd_msg)
+    #await bot.add_reaction(message=eightball_cmd_msg, emoji='❌')
+    #if bot.wait_for_reaction(user=ctx.message.author, message=eightball_cmd_msg, emoji='❌')
+     #   await bot.delete_message(message=eightball_cmd_msg)
 
 
+
+
+# get audio from the microphone
+
+def startlistening():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Speak:")
+        audio = r.listen(source)
+
+    try:
+        print("Bot echo'd your voice and said: " + r.recognize_google(audio))
+        global listen_result
+        listen_result = r.recognize_google(audio)
+    except sr.UnknownValueError:
+        print("Could not understand audio")
+    except sr.RequestError as e:
+        print("Could not request results; {0}".format(e))
+
+
+
+
+
+@bot.command(Pass_context = True)
+async def listen():
+    startlistening()
+    await bot.say("**Dith says: **" + listen_result)
 
 
 bot.run("NDMxMjI3NTgzMzQyODM3NzYw.Dabrhw.THK_qrUmPLybTEDKU2Jy1_HOTuw")
